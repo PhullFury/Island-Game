@@ -31,9 +31,15 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		UCameraComponent* FPSCamera;
 	UPROPERTY(EditAnywhere, Category = "Movement", meta = (AllowPrivateAccess = "true"))
-		float CurrentSpeed = 50.f;
+		float IslandManSpeed = 600.f;
 	UPROPERTY(EditAnywhere, Category = "Movement", meta = (AllowPrivateAccess = "true"))
 		float TurnRate = 50.f;
+	UPROPERTY(EditAnywhere, Category = "Movement", meta = (AllowPrivateAccess = "true"))
+		float SpeedRate = 1.f;
+	UPROPERTY(EditAnywhere, Category = "Movement", meta = (AllowPrivateAccess = "true"))
+		float MaxMultiplier = 1.5;
+	UPROPERTY(EditAnywhere, Category = "Debug", meta = (AllowPrivateAccess = "true"))
+		bool bShowDebug = false;
 
 	void MoveVertical(float AxisValue);
 	void MoveSideways(float AxisValue);
@@ -41,4 +47,8 @@ private:
 	void TurnSideways(float AxisValue);
 	void StartSprint();
 	void StopSprint();
+	void SetSpeed(float DeltaTime);
+
+	bool bIsSprinting;
+	float CurrentMultiplier;
 };

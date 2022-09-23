@@ -4,6 +4,7 @@
 #include "IslandMan.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 // Sets default values
 AIslandMan::AIslandMan()
@@ -15,7 +16,7 @@ AIslandMan::AIslandMan()
 
 	FPSCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FPS Camera"));
 	FPSCamera->SetupAttachment(GetCapsuleComponent());
-	FPSCamera->SetRelativeLocation(0.f, 0.f, 40.f);
+	FPSCamera->SetRelativeLocation(FVector(0.f, 0.f, 40.f));
 	FPSCamera->bUsePawnControlRotation = true;
 }
 
@@ -24,6 +25,9 @@ void AIslandMan::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	GetCharacterMovement()->MaxWalkSpeed = IslandManSpeed;
+	bIsSprinting = false;
+	CurrentMultiplier = 1;
 }
 
 // Called every frame
@@ -31,6 +35,11 @@ void AIslandMan::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	if (bShowDebug)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Current Z: %f"), GetVelocity().Z);
+	}
+	SetSpeed(DeltaTime);
 }
 
 // Called to bind functionality to input
@@ -48,12 +57,12 @@ void AIslandMan::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 
 void AIslandMan::MoveVertical(float AxisValue)
 {
-	AddMovementInput(GetActorForwardVector(), AxisValue * CurrentSpeed);
+	AddMovementInput(GetActorForwardVector(), AxisValue);
 }
 
 void AIslandMan::MoveSideways(float AxisValue)
 {
-	AddMovementInput(GetActorRightVector(), AxisValue * CurrentSpeed);
+	AddMovementInput(GetActorRightVector(), AxisValue);
 }
 
 void AIslandMan::TurnVertical(float AxisValue)
@@ -68,10 +77,35 @@ void AIslandMan::TurnSideways(float AxisValue)
 
 void AIslandMan::StartSprint()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Sprint iniated"));
+	bIsSprinting = true;
 }
 
 void AIslandMan::StopSprint()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Sprint ended"));
+	bIsSprinting = false;
+}
+
+void AIslandMan::SetSpeed(float DeltaTime)
+{
+	GetCharacterMovement()->MaxWalkSpeed = CurrentMultiplier * IslandManSpeed;
+	if (bIsSprinting && !GetVelocity().IsZero())
+	{
+		CurrentMultiplier = FMath::FInterpTo(CurrentMultiplier, MaxMultiplier, DeltaTime, SpeedRate);
+		if (CurrentMultiplier >= MaxMultiplier - 0.2)
+		{
+			CurrentMultiplier = MaxMultiplier;
+		}
+	}
+	else if (!bIsSprinting)
+	{
+		CurrentMultiplier = FMath::FInterpTo(CurrentMultiplier, 1, DeltaTime, SpeedRate);
+		if (CurrentMultiplier <= 1.2)
+		{
+			CurrentMultiplier = 1;
+		}
+		if (GetVelocity().IsZero())
+		{
+			CurrentMultiplier = 1;
+		}
+	}
 }
